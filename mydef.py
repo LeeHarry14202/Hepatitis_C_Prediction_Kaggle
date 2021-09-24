@@ -12,7 +12,7 @@ def draw_missing_data_table(dataframe):
     total_missing_data = dataframe.isnull().sum()
     total_row_dataframe = dataframe.isnull().count()
     percent_missing_data = (total_missing_data / total_row_dataframe)
-    missing_data_table = pd.concat([total_missing_data , percent_missing_data], axis=1, keys=['Total', 'Percent'])
+    missing_data_table = pd.concat([total_missing_data , percent_missing_data], axis=1, keys=['Total', 'Percent']).reset_index
     return missing_data_table
 
 def fill_missing_data(df):
@@ -145,7 +145,7 @@ def score_module_classifier(x_train, y_train, x_test, y_test):
     from sklearn.tree import DecisionTreeClassifier
 
     classifiers = [
-        [XGBClassifier(random_state =1),'XGB Classifier'], [RandomForestClassifier(random_state =1),'Random Forest'], 
+        [XGBClassifier(random_state =1, use_label_encoder=False),'XGB Classifier'], [RandomForestClassifier(random_state =1),'Random Forest'], 
         [LGBMClassifier(random_state =1),'LGBM Classifier'], [KNeighborsClassifier(), 'K-Nearest Neighbours'], 
         [SGDClassifier(random_state =1),'SGD Classifier'], [SVC(random_state =1),'SVC'],
         [GaussianNB(),'GaussianNB'],[DecisionTreeClassifier(random_state =1),'Decision Tree Classifier']
@@ -188,3 +188,42 @@ def SMOTE(x, y, xlabel_name =None):
     plt.show()
     return x,y
 
+
+def draw_important_feature(features, x, y,x_train , y_train ):  
+    # Import ML Libraries
+    from sklearn.feature_selection import SelectFromModel
+    from sklearn.metrics import accuracy_score, recall_score, precision_score , confusion_matrix
+    from xgboost import XGBClassifier
+    from sklearn.linear_model import SGDClassifier
+    from sklearn.neighbors import KNeighborsClassifier
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.svm import SVC
+    from lightgbm import LGBMClassifier
+    from sklearn.naive_bayes import GaussianNB
+    from sklearn.tree import DecisionTreeClassifier
+
+    classifiers = [
+        [XGBClassifier(random_state =1, use_label_encoder=False, eval_metric='mlogloss'),'XGB Classifier'],
+        [RandomForestClassifier(random_state =1),'Random Forest'], 
+        [LGBMClassifier(random_state =1),'LGBM Classifier'], 
+        [DecisionTreeClassifier(random_state =1),'Decision Tree Classifier']]
+
+    for cls in classifiers:
+        model = cls[0]
+        model.fit(x_train, y_train)
+        
+        print(f"{cls}")
+        best_feature = SelectFromModel(cls[0])
+        best_feature.fit(x,y)
+
+        transformedX = best_feature.transform(x)
+        print(f"Old Shape: {x.shape} New shape: {transformedX.shape}")
+        print("\n")
+
+        imp_feature = pd.DataFrame({'Feature': features, 'Importance': model.feature_importances_})
+        plt.figure(figsize=(10,4));
+        plt.title("Feature Importance Graphic");
+        plt.xlabel("importance ");
+        plt.ylabel("features");
+        plt.barh(list(imp_feature['Feature'].values), list(imp_feature['Importance'].values),     color = sns.color_palette());
+        plt.show(); 
