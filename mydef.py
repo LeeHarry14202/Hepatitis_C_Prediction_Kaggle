@@ -11,8 +11,8 @@ sns.set_theme()
 def draw_missing_data_table(dataframe):
     total_missing_data = dataframe.isnull().sum()
     total_row_dataframe = dataframe.isnull().count()
-    percent_missing_data = (total_missing_data / total_row_dataframe)
-    missing_data_table = pd.concat([total_missing_data , percent_missing_data], axis=1, keys=['Total', 'Percent']).reset_index
+    percent_missing_data = round((total_missing_data / total_row_dataframe) *100, 2)
+    missing_data_table = pd.concat([total_missing_data , percent_missing_data], axis=1, keys=['Total', 'Percent (%)']).reset_index(drop =False)
     return missing_data_table
 
 def fill_missing_data(df):
